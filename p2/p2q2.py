@@ -22,6 +22,9 @@ delta = 1 # Huber loss parameter
 m = x.shape[0]
 n = x.shape[1]
 
+print(x.shape)
+print(y.shape)
+
 #Define Variable
 t = cp.Variable((m,1))
 r_p = cp.Variable((m,1), nonneg=True)
@@ -53,7 +56,7 @@ prob2.solve(solver=cp.MOSEK, verbose=True)
 y_predict_method1 = w.value*x + (b.value * np.ones(m)).reshape((m,1))
 
 plt.figure(figsize=(8,8))
-plt.scatter([xi for xi in x],[yi for yi in y], s=15, c = "#1f77b4")
+plt.scatter([xi for xi in x],[yi for yi in y], s=15, label = "Data", c = "#1f77b4")
 plt.plot([xi for xi in x],[yi for yi in y_predict_method2], linewidth = 2, label = "Huberloss", c = "#ff7f0e")
 plt.plot([xi for xi in x],[yi for yi in y_predict_method1], linewidth = 2, label = "Least squares", c = "#2ca02c")
 plt.title('Regression vs Huber Loss', fontsize=16, fontweight='bold')
