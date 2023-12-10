@@ -9,13 +9,14 @@ import os
 
 
 # Data of coordinates (in meters)
-points = np.load(os.path.join(os.path.dirname(__file__),'points_small.npy'))
-#points = np.load('points_large.npy')
-print(points)
+#points = np.load(os.path.join(os.path.dirname(__file__),'points_small.npy'))
+points = np.load(os.path.join(os.path.dirname(__file__),'points_large.npy'))
+
 
 # Adjacency Matrix - A is matrix with components A_ij. A_ij=1 if (i,j) is connected; 0 otherwise.
-A = np.array([[ 1 if np.linalg.norm(i-j,2)<=25 else 0 for j in points] for i in points])
-print(A)
+A = np.array([[ 1 if (np.linalg.norm(i-j,2)<=25) else 0 for j in points] for i in points])
+for i in range(len(points)):
+    A[i][i] = 0
     
 # Draw the graph            
 G = nx.from_numpy_array(A)
@@ -33,22 +34,21 @@ plt.show()
 
 #Define Variable
 n = len(points)
-X = cp.Variable((n,n),symmetric=True)
+XX = cp.Variable((n,n),symmetric=True)
 x = cp.Variable((n,1))
 obj = cp.Variable(1)
 one = np.array([1])
-matrix = cp.vstack([cp.hstack([cp.reshape(one,(1,1)), x.T]), cp.hstack([x, X])])
+matrix = cp.bmat([[cp.reshape(one,(1,1)), x.T], [x, XX]])
 
 constraints = [ 
-    obj <= cp.trace(X),
+    obj <= cp.trace(XX),
     matrix >> 0
     ]
-constraints.extend( [ X[i][i]==x[i] for i in range(n)] )
+constraints.extend( [ XX[i][i]==x[i] for i in range(n)] )
 for i in range(n):
     for j in range(n):
         if A[i][j] == 1:
-            constraints.append(X[i][j]==0)
-
+            constraints.append(XX[i][j]==0)
 
 #Define Objective
 objective = cp.Maximize(obj)
@@ -56,44 +56,78 @@ objective = cp.Maximize(obj)
     
 start = time.time()
 prob = cp.Problem(objective, constraints) #FILL
-prob.solve(solver=cp.MOSEK, verbose=True) #FILL
+prob.solve(solver=cp.MOSEK, verbose=False) #FILL
 end = time.time()
 
 print("Total time SDP: ", end-start) 
 print("x value: ",x.value)
-print("X value:" ,X.value )
+print("XX value: " ,XX.value)
+print("Obj value: ", obj.value)
 
 
-# #%% 
-# """ Rounding Heuristic """
+""" Rounding Heuristic """
 
-# # +-----------------+
-# # | Your Code Here! |
-# # +-----------------+
+# +-----------------+
+# | Your Code Here! |
+# +-----------------+
+L = []
+V = [i for i in range(n)]
+
+for i in range(n):
+    if V == []:
+        break
+    check = np.array([x.value[j] for j in V])
+    ind = np.argmax(check)
+    i_star = V[ind]
+    count = 0
+    for k in range(n):
+        if A[i_star][k] == 1 and k in L:
+            count += 1
+    if count > 0:
+        V.pop(ind)
+    else:
+        L.append(i_star)
+        V.pop(ind)
+    print("Iteration",i,"L: ",L, "V: ", V)
+
+    
+    
 
 
-# """ Draw the graph with the selected locations """
+""" Draw the graph with the selected locations """
 
 
-# selected_locations = 
+selected_locations = L
 
-# nx.draw_networkx_nodes(G, pos, nodelist=set(range(len(A))), node_size=200, node_color='lightblue')
-# nx.draw_networkx_edges(G, pos, edge_color='gray', width=0.5)
-# nx.draw_networkx_labels(G, pos, font_weight='bold', font_size=6)
+nx.draw_networkx_nodes(G, pos, nodelist=set(range(len(A))), node_size=200, node_color='lightblue')
+nx.draw_networkx_edges(G, pos, edge_color='gray', width=0.5)
+nx.draw_networkx_labels(G, pos, font_weight='bold', font_size=6)
 
-# # Selected locations are lightgreen in your graph
-# nx.draw_networkx_nodes(G, pos, nodelist=np.array(selected_locations), node_size=200, node_color='lightgreen')
+# Selected locations are lightgreen in your graph
+nx.draw_networkx_nodes(G, pos, nodelist=np.array(selected_locations), node_size=200, node_color='lightgreen')
 
-# plt.show()
-
-
-# print("Optimal value of IP is between ", your_opt_value_from_rounding_heuristic, " and ", np.floor(your_opt_val_from_sdp))
+plt.show()
 
 
-# #%%
-# """ Integer Solver """
-# y_val, prob_ip_val = integer_solver(A)
+print("Optimal value of IP is between ", len(L), " and ", np.floor(obj.value))
 
-# # +------------------------+
-# # | Plot the graph from IP |
-# # +------------------------+
+
+""" Integer Solver """
+y_val, prob_ip_val = integer_solver(A)
+
+print(y_val, prob_ip_val)
+# +------------------------+
+# | Plot the graph from IP |
+# +------------------------+
+for ind, val in enumerate(y_val):
+    if val == 1:
+        selected_locations.append(ind) 
+
+nx.draw_networkx_nodes(G, pos, nodelist=set(range(len(A))), node_size=200, node_color='lightblue')
+nx.draw_networkx_edges(G, pos, edge_color='gray', width=0.5)
+nx.draw_networkx_labels(G, pos, font_weight='bold', font_size=6)
+
+# Selected locations are lightgreen in your graph
+nx.draw_networkx_nodes(G, pos, nodelist=np.array(selected_locations), node_size=200, node_color='lightgreen')
+
+plt.show()

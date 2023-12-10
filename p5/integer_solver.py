@@ -12,7 +12,7 @@ def integer_solver(adjancy_matrix):
 
     start_ip = time.time()
     prob_ip = cp.Problem(objective_ip, constraint_ip)
-    prob_ip_value = prob_ip.solve(solver=cp.MOSEK, verbose=True)
+    prob_ip_value = prob_ip.solve(solver=cp.MOSEK, verbose=False)
     
     end_ip = time.time()
 
