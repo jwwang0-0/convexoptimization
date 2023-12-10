@@ -119,15 +119,16 @@ print(y_val, prob_ip_val)
 # +------------------------+
 # | Plot the graph from IP |
 # +------------------------+
+new_locations = []
 for ind, val in enumerate(y_val):
     if val == 1:
-        selected_locations.append(ind) 
+        new_locations.append(ind) 
 
 nx.draw_networkx_nodes(G, pos, nodelist=set(range(len(A))), node_size=200, node_color='lightblue')
 nx.draw_networkx_edges(G, pos, edge_color='gray', width=0.5)
 nx.draw_networkx_labels(G, pos, font_weight='bold', font_size=6)
 
 # Selected locations are lightgreen in your graph
-nx.draw_networkx_nodes(G, pos, nodelist=np.array(selected_locations), node_size=200, node_color='lightgreen')
+nx.draw_networkx_nodes(G, pos, nodelist=np.array(new_locations), node_size=200, node_color='lightgreen')
 
 plt.show()
