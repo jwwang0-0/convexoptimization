@@ -60,9 +60,9 @@ prob.solve(solver=cp.MOSEK, verbose=False) #FILL
 end = time.time()
 
 print("Total time SDP: ", end-start) 
-print("x value: ",x.value)
-print("XX value: " ,XX.value)
-print("Obj value: ", obj.value)
+#print("x value: ",x.value)
+#print("XX value: " ,XX.value)
+#print("Obj value: ", obj.value)
 
 
 """ Rounding Heuristic """
@@ -88,7 +88,7 @@ for i in range(n):
     else:
         L.append(i_star)
         V.pop(ind)
-    print("Iteration",i,"L: ",L, "V: ", V)
+    # print("Iteration",i,"L: ",L, "V: ", V)
 
     
     
@@ -115,20 +115,33 @@ print("Optimal value of IP is between ", len(L), " and ", np.floor(obj.value))
 """ Integer Solver """
 y_val, prob_ip_val = integer_solver(A)
 
-print(y_val, prob_ip_val)
+#print(y_val, prob_ip_val)
 # +------------------------+
 # | Plot the graph from IP |
 # +------------------------+
 new_locations = []
 for ind, val in enumerate(y_val):
-    if val == 1:
+    if abs(val - 1) < 0.0001:
         new_locations.append(ind) 
+
 
 nx.draw_networkx_nodes(G, pos, nodelist=set(range(len(A))), node_size=200, node_color='lightblue')
 nx.draw_networkx_edges(G, pos, edge_color='gray', width=0.5)
 nx.draw_networkx_labels(G, pos, font_weight='bold', font_size=6)
 
+sdp_u = np.setdiff1d(np.array(selected_locations), np.array(new_locations))
+ip_u = np.setdiff1d(np.array(new_locations), np.array(selected_locations))
+common = np.intersect1d(np.array(new_locations), np.array(selected_locations))
+print("old: ", selected_locations)
+print("new: ", new_locations)
+print("common: ", common)
+print("SDP: ", sdp_u)
+print("ip_u: ", ip_u)
 # Selected locations are lightgreen in your graph
-nx.draw_networkx_nodes(G, pos, nodelist=np.array(new_locations), node_size=200, node_color='lightgreen')
+nx.draw_networkx_nodes(G, pos, nodelist=common, node_size=200, node_color='lightgreen')
+if len(sdp_u) != 0:
+    nx.draw_networkx_nodes(G, pos, nodelist=sdp_u, node_size=200, node_color='lightyellow')
+if len(ip_u) != 0:
+    nx.draw_networkx_nodes(G, pos, nodelist=ip_u, node_size=200, node_color='lightpink')
 
 plt.show()
