@@ -9,8 +9,8 @@ import os
 
 
 # Data of coordinates (in meters)
-#points = np.load(os.path.join(os.path.dirname(__file__),'points_small.npy'))
-points = np.load(os.path.join(os.path.dirname(__file__),'points_large.npy'))
+points = np.load(os.path.join(os.path.dirname(__file__),'points_small.npy'))
+#points = np.load(os.path.join(os.path.dirname(__file__),'points_large.npy'))
 
 
 # Adjacency Matrix - A is matrix with components A_ij. A_ij=1 if (i,j) is connected; 0 otherwise.
@@ -56,7 +56,7 @@ objective = cp.Maximize(obj)
     
 start = time.time()
 prob = cp.Problem(objective, constraints) #FILL
-prob.solve(solver=cp.MOSEK, verbose=False) #FILL
+prob.solve(solver=cp.MOSEK, verbose=True) #FILL
 end = time.time()
 
 print("Total time SDP: ", end-start) 
@@ -138,10 +138,10 @@ print("common: ", common)
 print("SDP: ", sdp_u)
 print("ip_u: ", ip_u)
 # Selected locations are lightgreen in your graph
-nx.draw_networkx_nodes(G, pos, nodelist=common, node_size=200, node_color='lightgreen')
+nx.draw_networkx_nodes(G, pos, nodelist=common, node_size=200, node_color='lightgreen', label='SDP & IP')
 if len(sdp_u) != 0:
-    nx.draw_networkx_nodes(G, pos, nodelist=sdp_u, node_size=200, node_color='lightyellow')
+    nx.draw_networkx_nodes(G, pos, nodelist=sdp_u, node_size=200, node_color='lightyellow', label='SDP only')
 if len(ip_u) != 0:
-    nx.draw_networkx_nodes(G, pos, nodelist=ip_u, node_size=200, node_color='lightpink')
-
+    nx.draw_networkx_nodes(G, pos, nodelist=ip_u, node_size=200, node_color='lightpink', label='IP only')
+#plt.legend()
 plt.show()
