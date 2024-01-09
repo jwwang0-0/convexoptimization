@@ -34,6 +34,8 @@ Lambda = cp.Variable((N*N,N+1), nonneg = True)
 obj = cp.Variable((1))
 
 constraints = [ 
+# NEED TO ADD k to the problem
+    x[0:N] <= cp.reshape(k,(N,1)),
     obj >= x[N],
     A@x + B@u - Pi@cp.reshape(d, (N+1,1)) >= 0,
     B@V >= R - Pi@D,
@@ -49,11 +51,13 @@ prob1.solve(solver=cp.GUROBI, verbose=True)
 x_val = x.value
 u_val = u.value
 V_val = V.value
+print(obj.value)
 
 # Save optimal decisions to npy-file
 np.save('xval.npy', x_val)
 np.save('uval.npy', u_val)
 np.save('Vval.npy', V_val)
+np.save('Obj.npy', obj.value )
 
 
 # Visualization

@@ -1,16 +1,18 @@
 import cvxpy as cp
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+PATH = os.path.dirname(__file__)
 
-# Load data
-A = np.load('data/A.npy')
-B = np.load('data/B.npy')
-d = np.load('data/d.npy')
-R = np.load('data/R.npy')
-D = np.load('data/D-mat.npy')
-k = np.load('data/k.npy')
-N = np.load('data/N.npy').item()
-Loc = np.load('data/Loc.npy')
+# load data
+A = np.load(os.path.join(PATH,'data/A.npy'))
+B = np.load(os.path.join(PATH,'data/B.npy'))
+d = np.load(os.path.join(PATH,'data/d.npy'))
+R = np.load(os.path.join(PATH,'data/R.npy'))
+D = np.load(os.path.join(PATH,'data/D-mat.npy'))
+k = np.load(os.path.join(PATH,'data/k.npy'))
+N = np.load(os.path.join(PATH,'data/N.npy')).item()
+Loc = np.load(os.path.join(PATH,'data/Loc.npy'))
 x = np.load('xval.npy')
 u = np.load('uval.npy')
 V = np.load('Vval.npy')
@@ -18,6 +20,41 @@ V = np.load('Vval.npy')
 # +-------------------+
 # |  Your Code Here!  |
 # +-------------------+
+
+# Method 1
+
+#Step 1 Obtain Y
+print(d.shape)
+z = d[0:N] / 3
+print(z.shape)
+
+#Step 1 Calculate Y
+Y = u + V @ z
+print(Y.shape)
+
+# Method 2
+#Define Variable
+x = cp.Variable((N+1,1))
+y = cp.Variable((N,N), nonneg = True) #NONNEG TRUE?
+
+
+constraints = [ 
+    x[0:N] <= cp.reshape(k,(N,1)),
+    ...
+    # obj >= x[N],
+    # A@x + B@u - Pi@cp.reshape(d, (N+1,1)) >= 0,
+    # B@V >= R - Pi@D,
+    # u - Lambda@cp.reshape(d, (N+1,1)) >= 0,
+    # Lambda@D + V >= 0
+    ]
+
+#Define Objective
+objective = cp.Minimize(obj)
+prob1 = cp.Problem(objective, constraints)
+prob1.solve(solver=cp.GUROBI, verbose=True)
+
+
+
 
 # Retrieve optimal objective value and decisions
 opt_obj = prob.value
